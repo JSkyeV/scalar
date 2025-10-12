@@ -244,15 +244,24 @@ const shouldRenderObjectProperties = computed(() => {
 })
 
 const shouldShowEnumDescriptions = computed(() => {
-  if (!optimizedValue.value?.['x-enumDescriptions']) {
+  if (!optimizedValue.value?.['x-enum-descriptions']) {
     return false
   }
 
-  const enumDescriptions = optimizedValue.value['x-enumDescriptions']
+  const enumDescriptions = optimizedValue.value['x-enum-descriptions']
 
   return (
     typeof enumDescriptions === 'object' && !Array.isArray(enumDescriptions)
   )
+})
+
+const shouldShowEnumVarNames = computed(() => {
+  if (!optimizedValue.value?.['x-enum-varnames']) {
+    return false
+  }
+
+  const enumVarNames = optimizedValue.value['x-enum-varnames']
+  return Array.isArray(enumVarNames) && enumVarNames.length > 0
 })
 </script>
 <template>
@@ -313,58 +322,95 @@ const shouldShowEnumDescriptions = computed(() => {
     <div
       v-if="getEnumFromValue(optimizedValue)?.length > 0 && !isDiscriminator"
       class="property-enum">
-      <template v-if="shouldShowEnumDescriptions">
-        <div class="property-list">
-          <div
-            v-for="enumValue in getEnumFromValue(optimizedValue)"
-            :key="enumValue"
-            class="property">
-            <div class="property-heading">
-              <div class="property-name">
-                {{ enumValue }}
-              </div>
-            </div>
-            <div class="property-description">
-              <ScalarMarkdown
-                :value="optimizedValue?.['x-enumDescriptions']?.[enumValue]" />
-            </div>
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <ul class="property-enum-values">
-          <li
-            v-for="enumValue in visibleEnumValues"
-            :key="enumValue"
-            class="property-enum-value">
+      <ul class="property-enum-values">
+        <li
+          v-for="(enumValue, index) in visibleEnumValues"
+          :key="enumValue"
+          class="property-enum-value"
+          :class="{
+            'property-enum-value--last':
+              !hasLongEnumList && index === visibleEnumValues.length - 1,
+          }">
+          <div class="property-enum-content">
             <span class="property-enum-value-label">
               {{ enumValue }}
+              <span
+                v-if="
+                  shouldShowEnumVarNames &&
+                  optimizedValue?.['x-enum-varnames']?.[index]
+                "
+                class="property-enum-varname">
+                = {{ optimizedValue['x-enum-varnames'][index] }}
+              </span>
             </span>
-          </li>
-          <Disclosure
-            v-if="hasLongEnumList"
-            v-slot="{ open }">
-            <DisclosurePanel>
-              <li
-                v-for="enumValue in remainingEnumValues"
-                :key="enumValue"
-                class="property-enum-value">
+            <div
+              v-if="
+                shouldShowEnumDescriptions &&
+                optimizedValue?.['x-enum-descriptions']?.[enumValue]
+              "
+              class="property-enum-description">
+              <ScalarMarkdown
+                :value="optimizedValue?.['x-enum-descriptions']?.[enumValue]" />
+            </div>
+          </div>
+        </li>
+        <Disclosure
+          v-if="hasLongEnumList"
+          v-slot="{ open }">
+          <DisclosurePanel>
+            <li
+              v-for="(enumValue, index) in remainingEnumValues"
+              :key="enumValue"
+              class="property-enum-value"
+              :class="{
+                'property-enum-value--last':
+                  index === remainingEnumValues.length - 1,
+              }">
+              <div class="property-enum-content">
                 <span class="property-enum-value-label">
                   {{ enumValue }}
+                  <span
+                    v-if="
+                      shouldShowEnumVarNames &&
+                      optimizedValue?.['x-enum-varnames']?.[
+                        initialEnumCount + index
+                      ]
+                    "
+                    class="property-enum-varname">
+                    =
+                    {{
+                      optimizedValue['x-enum-varnames'][
+                        initialEnumCount + index
+                      ]
+                    }}
+                  </span>
                 </span>
-              </li>
-            </DisclosurePanel>
-            <DisclosureButton class="enum-toggle-button">
-              <ScalarIcon
-                class="enum-toggle-button-icon"
-                :class="{ 'enum-toggle-button-icon--open': open }"
-                icon="Add"
-                size="sm" />
-              {{ open ? 'Hide values' : 'Show all values' }}
-            </DisclosureButton>
-          </Disclosure>
-        </ul>
-      </template>
+                <div
+                  v-if="
+                    shouldShowEnumDescriptions &&
+                    optimizedValue?.['x-enum-descriptions']?.[enumValue]
+                  "
+                  class="property-enum-description">
+                  <ScalarMarkdown
+                    :value="
+                      optimizedValue?.['x-enum-descriptions']?.[enumValue]
+                    " />
+                </div>
+              </div>
+            </li>
+          </DisclosurePanel>
+          <DisclosureButton
+            class="enum-toggle-button"
+            :class="{ 'enum-toggle-button--open': open }">
+            <ScalarIcon
+              class="enum-toggle-button-icon"
+              :class="{ 'enum-toggle-button-icon--open': open }"
+              icon="Add"
+              size="sm" />
+            {{ open ? 'Hide values' : 'Show all values' }}
+          </DisclosureButton>
+        </Disclosure>
+      </ul>
     </div>
     <!-- Object -->
     <div
@@ -571,13 +617,35 @@ const shouldShowEnumDescriptions = computed(() => {
   align-items: stretch;
   position: relative;
 }
+.property-enum-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 .property-enum-value-label {
   display: flex;
   padding: 3px 0;
   font-family: var(--scalar-font-code);
 }
-.property-enum-value:last-of-type .property-enum-value-label {
+.property-enum-varname {
+  color: var(--scalar-color-2);
+  opacity: 0.8;
+  margin-left: 4px;
+}
+.property-enum-value--last .property-enum-value-label {
   padding-bottom: 0;
+}
+.property-enum-description {
+  margin-top: 2px;
+  margin-left: 0;
+  margin-bottom: 4px;
+  line-height: 1.4;
+  font-size: var(--scalar-small);
+  color: var(--scalar-color-2);
+}
+.property-enum-description :deep(*) {
+  color: var(--scalar-color-2) !important;
+  opacity: 0.8;
 }
 .property-enum-value::before {
   content: '';
@@ -587,18 +655,21 @@ const shouldShowEnumDescriptions = computed(() => {
   background: currentColor;
   color: var(--scalar-color-3);
 }
+.property-enum-value--last::before {
+  height: calc(3px + 0.75em + var(--scalar-border-width));
+}
 .property-enum-value:after {
   content: '';
   position: absolute;
-  top: 50%;
+  top: calc(3px + 0.75em);
   left: 0;
   width: 8px;
   height: var(--scalar-border-width);
   background: currentColor;
 }
-.property-enum-value:last-of-type::after {
-  bottom: 0;
-  height: 50%;
+.property-enum-value--last::after {
+  bottom: calc(100% - 3px - 0.75em - var(--scalar-border-width));
+  height: calc(3px + 0.75em + var(--scalar-border-width));
   background: var(--scalar-background-1);
   border-top: var(--scalar-border-width) solid currentColor;
 }
@@ -649,6 +720,24 @@ const shouldShowEnumDescriptions = computed(() => {
   padding: 6px 10px;
   user-select: none;
   white-space: nowrap;
+  position: relative;
+}
+.enum-toggle-button::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: 0;
+  height: 18px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--scalar-background-1) 80%
+  );
+  pointer-events: none;
+}
+.enum-toggle-button--open::before {
+  display: none;
 }
 .enum-toggle-button:hover {
   color: var(--scalar-color-1);
