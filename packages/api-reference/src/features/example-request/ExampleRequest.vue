@@ -17,6 +17,7 @@ import {
 import { isDereferenced } from '@scalar/openapi-types/helpers'
 import type { ClientId, TargetId } from '@scalar/snippetz'
 import type { OpenAPIV3_1 } from '@scalar/types/legacy'
+import { Base64 } from 'js-base64'
 import {
   computed,
   inject,
@@ -244,7 +245,7 @@ const secretCredentials = computed(() =>
       return [
         scheme.token,
         scheme.password,
-        btoa(`${scheme.username}:${scheme.password}`),
+        Base64.encode(`${scheme.username}:${scheme.password}`),
       ]
     }
     if (scheme.type === 'oauth2') {

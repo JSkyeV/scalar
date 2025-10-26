@@ -14,6 +14,8 @@ import type { SelectedSecuritySchemeUids } from '@scalar/oas-utils/entities/shar
 import * as electron from '../electron'
 import { createRequestOperation } from './create-request-operation'
 
+import { Base64 } from 'js-base64'
+
 const PROXY_PORT = 5051
 const VOID_PORT = 5052
 const PROXY_URL = `http://127.0.0.1:${PROXY_PORT}`
@@ -967,7 +969,7 @@ describe('create-request-operation', () => {
         throw new Error('No data')
       }
       expect(JSON.parse(result?.response.data as string).headers).toMatchObject({
-        authorization: `Basic ${btoa('user:pass')}`,
+        authorization: `Basic ${Base64.encode('user:pass')}`,
       })
     })
 
