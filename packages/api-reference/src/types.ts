@@ -30,7 +30,7 @@ export type ReferenceLayoutProps = {
    * The raw OpenAPI document. Doesn't have to be OpenAPI 3.1.
    */
   originalDocument?: string
-  isDark: boolean
+  isDark?: boolean
   /**
    * @deprecated We can't use this anymore. Use `dereferencedDocument` instead.
    */

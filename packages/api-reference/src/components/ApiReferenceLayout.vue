@@ -66,6 +66,7 @@ const {
   configuration: providedConfiguration,
   originalDocument: providedOriginalDocument,
   dereferencedDocument: providedDereferencedDocument,
+  isDark,
 } = defineProps<ReferenceLayoutProps>()
 
 defineEmits<{
@@ -79,6 +80,24 @@ defineEmits<{
 const configuration = computed(() =>
   apiReferenceConfigurationSchema.parse(providedConfiguration),
 )
+
+// If isDark doesn't exist, will use the useColorMode sequence to define initial config
+const darkModeState = computed(() => {
+  // Use explicit prop if provided
+  if (isDark !== undefined) return isDark
+
+  // Check stored user preference
+  const stored = localStorage?.getItem('colorMode')
+  if (stored) return stored === 'dark'
+
+  // Fall back to system preference
+  return window?.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false
+})
+
+const effectiveDarkMode = computed(() => {
+  const result = isDark ?? darkModeState.value
+  return result
+})
 
 // Configure Reference toasts to use vue-sonner
 const { initializeToasts, toast } = useToasts()
@@ -422,7 +441,7 @@ watch(hash, (newHash, oldHash) => {
                   <template #toggle>
                     <ScalarColorModeToggleButton
                       v-if="!configuration.hideDarkModeToggle"
-                      :modelValue="isDark"
+                      :modelValue="effectiveDarkMode"
                       @update:modelValue="$emit('toggleDarkMode')" />
                     <span v-else />
                   </template>
@@ -472,7 +491,7 @@ watch(hash, (newHash, oldHash) => {
                   <ScalarColorModeToggleIcon
                     v-if="!configuration.hideDarkModeToggle"
                     class="text-c-2 hover:text-c-1"
-                    :mode="isDark ? 'dark' : 'light'"
+                    :mode="effectiveDarkMode ? 'dark' : 'light'"
                     style="transform: scale(1.4)"
                     variant="icon"
                     @click="$emit('toggleDarkMode')" />
