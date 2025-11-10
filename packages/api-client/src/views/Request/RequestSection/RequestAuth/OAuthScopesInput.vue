@@ -27,6 +27,11 @@ const scopes = computed(() =>
 /** An array of the selected scope ids */
 const selectedScopes = computed(() => flow?.selectedScopes || [])
 
+/** Check if all scopes are selected */
+const isAllSelected = computed(
+  () => selectedScopes.value.length === Object.keys(flow?.scopes ?? {}).length,
+)
+
 function setScope(id: string, checked: boolean) {
   // Checked - Add scope to list
   if (checked) {
@@ -50,6 +55,19 @@ function selectAllScopes() {
     Object.keys(flow?.scopes ?? {}),
   )
 }
+
+function deselectAllScopes() {
+  updateScheme(`flows.${flow.type}.selectedScopes`, [])
+}
+
+/** Toggle between select all and deselect all */
+function toggleAllScopes() {
+  if (isAllSelected.value) {
+    deselectAllScopes()
+  } else {
+    selectAllScopes()
+  }
+}
 </script>
 
 <template>
@@ -72,16 +90,11 @@ function selectAllScopes() {
           </div>
           <div class="flex items-center gap-1.75">
             <ScalarButton
-              v-if="
-                flow?.selectedScopes?.length > 4 &&
-                open &&
-                flow?.selectedScopes?.length <
-                  Object.keys(flow?.scopes ?? {}).length
-              "
+              v-if="flow?.selectedScopes?.length >= 5 && open"
               class="text-c-3 hover:bg-b-2 hover:text-c-1 rounded px-1.5"
               size="sm"
-              @click.stop="selectAllScopes">
-              Select All
+              @click.stop="toggleAllScopes">
+              {{ isAllSelected ? 'Deselect All' : 'Select All' }}
             </ScalarButton>
             <ScalarIcon
               class="text-c-3 group-hover/scopes-accordion:text-c-2"
