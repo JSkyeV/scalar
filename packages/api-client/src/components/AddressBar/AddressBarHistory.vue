@@ -20,8 +20,8 @@ const { operation, target } = defineProps<{
   /** The id of the target to use for the popover (e.g. address bar) */
   target: string
 }>()
-
-const { requestHistory } = useWorkspace()
+// look here
+const { requestHistory, clearRequestHistory } = useWorkspace()
 
 /** Use a local copy to prevent mutation of the reactive object */
 const history = computed(() =>
@@ -38,6 +38,12 @@ function handleHistoryClick(requestHistoryItem: RequestEvent) {
   )
   // TODO: Restore the request data with the history item
   // TODO: Restore the response data with the history item
+}
+
+function handleClearHistory() {
+  if (confirm('Are you sure you want to clear the request history?')) {
+    clearRequestHistory()
+  }
 }
 </script>
 <template>
@@ -62,6 +68,21 @@ function handleHistoryClick(requestHistoryItem: RequestEvent) {
       <template
         v-if="open"
         #floating="{ width }">
+        <!-- Clear History Button -->
+        <div
+          v-if="history?.length"
+          class="border-b border-b-3 p-2"
+          :style="{ width }">
+          <button
+            class="text-c-3 hover:text-c-1 hover:bg-b-2 flex w-full items-center gap-2 rounded px-2 py-1 text-sm"
+            @click="handleClearHistory">
+            <ScalarIcon
+              icon="Trash"
+              size="sm" />
+            Clear History
+          </button>
+        </div>
+
         <!-- History Item -->
         <MenuItems
           class="custom-scroll grid max-h-[inherit] grid-cols-[44px_1fr_repeat(3,auto)] items-center border-t p-0.75"

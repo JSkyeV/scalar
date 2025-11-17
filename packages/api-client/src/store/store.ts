@@ -1,3 +1,9 @@
+import { useModal } from '@scalar/components'
+import type { RequestEvent, SecurityScheme } from '@scalar/oas-utils/entities/spec'
+import type { Path, PathValue } from '@scalar/object-utils/nested'
+import type { ApiReferenceConfiguration } from '@scalar/types/api-reference'
+import { inject, reactive, ref, toRaw, type InjectionKey } from 'vue'
+
 import { createStoreCollections, extendedCollectionDataFactory } from '@/store/collections'
 import { createStoreCookies } from '@/store/cookies'
 import { createStoreEnvironments, extendedEnvironmentDataFactory } from '@/store/environment'
@@ -10,11 +16,6 @@ import { createStoreServers, extendedServerDataFactory } from '@/store/servers'
 import type { StoreContext } from '@/store/store-context'
 import { createStoreTags, extendedTagDataFactory } from '@/store/tags'
 import { createStoreWorkspaces, extendedWorkspaceDataFactory } from '@/store/workspace'
-import { useModal } from '@scalar/components'
-import type { RequestEvent, SecurityScheme } from '@scalar/oas-utils/entities/spec'
-import type { Path, PathValue } from '@scalar/object-utils/nested'
-import type { ApiReferenceConfiguration } from '@scalar/types/api-reference'
-import { type InjectionKey, inject, reactive, ref, toRaw } from 'vue'
 
 export type UpdateScheme = <P extends Path<SecurityScheme>>(
   path: P,
@@ -101,6 +102,11 @@ export const createWorkspaceStore = ({
   // OTHER HELPER DATA
   /** Running request history list */
   const requestHistory = reactive<RequestEvent[]>([])
+
+  /** Clear all request history */
+  const clearRequestHistory = () => {
+    requestHistory.splice(0, requestHistory.length)
+  }
 
   const { importSpecFile, importSpecFromUrl } = importSpecFileFactory(storeContext)
 
@@ -203,6 +209,7 @@ export const createWorkspaceStore = ({
       delete: deleteRequestExample,
     },
     requestHistory,
+    clearRequestHistory,
     securitySchemeMutators: {
       ...securitySchemeMutators,
       rawAdd: securitySchemeMutators.add,
