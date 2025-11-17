@@ -56,7 +56,6 @@ function handleClearHistory() {
       :target="target">
       <!-- History -->
       <MenuButton
-        v-if="history?.length"
         class="address-bar-history-button z-context-plus text-c-3 focus:text-c-1 relative mr-1 rounded-lg p-1.5">
         <ScalarIcon
           icon="History"
@@ -84,35 +83,52 @@ function handleClearHistory() {
         </div>
 
         <!-- History Item -->
-        <MenuItems
-          class="custom-scroll grid max-h-[inherit] grid-cols-[44px_1fr_repeat(3,auto)] items-center border-t p-0.75"
-          static
-          :style="{ width }">
-          <MenuItem
-            v-for="(entry, index) in history"
-            :key="entry.timestamp"
-            as="button"
-            class="font-code ui-active:*:bg-b-2 text-c-2 contents text-sm font-medium *:flex *:h-8 *:cursor-pointer *:items-center *:rounded-none *:px-1.5 *:first:rounded-l *:last:rounded-r"
-            :value="index"
-            @click="handleHistoryClick(entry)">
-            <HttpMethod
-              v-if="entry.response.method"
-              class="text-[11px]"
-              :method="entry.response.method" />
-            <div class="min-w-0">
-              <div class="text-c-1 min-w-0 truncate">
-                {{ entry.response.path }}
+        <div v-if="history?.length">
+          <MenuItems
+            class="custom-scroll grid max-h-[inherit] grid-cols-[44px_1fr_repeat(3,auto)] items-center border-t p-0.75"
+            static
+            :style="{ width }">
+            <MenuItem
+              v-for="(entry, index) in history"
+              :key="entry.timestamp"
+              as="button"
+              class="font-code ui-active:*:bg-b-2 text-c-2 contents text-sm font-medium *:flex *:h-8 *:cursor-pointer *:items-center *:rounded-none *:px-1.5 *:first:rounded-l *:last:rounded-r"
+              :value="index"
+              @click="handleHistoryClick(entry)">
+              <HttpMethod
+                v-if="entry.response.method"
+                class="text-[11px]"
+                :method="entry.response.method" />
+              <div class="min-w-0">
+                <div class="text-c-1 min-w-0 truncate">
+                  {{ entry.response.path }}
+                </div>
               </div>
-            </div>
-            <div>{{ formatMs(entry.response.duration) }}</div>
-            <div :class="[getStatusCodeColor(entry.response.status).color]">
-              {{ entry.response.status }}
-            </div>
-            <div>
-              {{ httpStatusCodes[entry.response.status]?.name }}
-            </div>
-          </MenuItem>
-        </MenuItems>
+              <div>{{ formatMs(entry.response.duration) }}</div>
+              <div :class="[getStatusCodeColor(entry.response.status).color]">
+                {{ entry.response.status }}
+              </div>
+              <div>
+                {{ httpStatusCodes[entry.response.status]?.name }}
+              </div>
+            </MenuItem>
+          </MenuItems>
+        </div>
+        <!-- Empty State -->
+        <div
+          v-else
+          class="text-c-3 flex flex-col items-center gap-2 p-4 text-center text-sm"
+          :style="{ width }">
+          <ScalarIcon
+            icon="History"
+            size="lg"
+            class="opacity-50" />
+          <div>
+            <div class="text-c-2 font-medium">No request history</div>
+            <div class="text-xs">Make a request to see it appear here</div>
+          </div>
+        </div>
+
         <ScalarFloatingBackdrop
           class="-top-(--scalar-address-bar-height) rounded-lg" />
       </template>
